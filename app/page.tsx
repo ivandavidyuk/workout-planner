@@ -1,101 +1,180 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import { useState } from "react";
+import { useRouter } from "next/router";
+import Calendar from "./components/Calendar";
+import {
+  useWorkout,
+  WorkoutPlan,
+  PlannedExercise,
+  ExerciseSet,
+} from "./context/WorkoutContext";
+import { EXERCISES } from "./data/exercises";
+
+interface ExerciseForm {
+  exerciseId: string;
+  sets: ExerciseSet[];
+}
+
+const HomePage = () => {
+  const router = useRouter();
+  const { setWorkoutPlan } = useWorkout();
+  const [date, setDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
+  const [exerciseForms, setExerciseForms] = useState<ExerciseForm[]>([]);
+
+  const addExercise = () => {
+    setExerciseForms([
+      ...exerciseForms,
+      { exerciseId: EXERCISES[0].id, sets: [{ weight: 0, reps: 0 }] },
+    ]);
+  };
+
+  const updateExercise = (index: number, updated: Partial<ExerciseForm>) => {
+    const newForms = [...exerciseForms];
+    newForms[index] = { ...newForms[index], ...updated };
+    setExerciseForms(newForms);
+  };
+
+  const addSet = (exerciseIndex: number) => {
+    const newForms = [...exerciseForms];
+    newForms[exerciseIndex].sets.push({ weight: 0, reps: 0 });
+    setExerciseForms(newForms);
+  };
+
+  const updateSet = (
+    exerciseIndex: number,
+    setIndex: number,
+    field: "weight" | "reps",
+    value: number
+  ) => {
+    const newForms = [...exerciseForms];
+    newForms[exerciseIndex].sets[setIndex] = {
+      ...newForms[exerciseIndex].sets[setIndex],
+      [field]: value,
+    };
+    setExerciseForms(newForms);
+  };
+
+  const startWorkout = () => {
+    if (exerciseForms.length === 0) {
+      alert("Добавьте хотя бы одно упражнение");
+      return;
+    }
+
+    const plannedExercises = exerciseForms.map((form) => {
+      const exerciseData = EXERCISES.find((ex) => ex.id === form.exerciseId);
+      return {
+        id: form.exerciseId,
+        name: exerciseData ? exerciseData.name : form.exerciseId,
+        sets: form.sets,
+      } as PlannedExercise;
+    });
+
+    const plan: WorkoutPlan = {
+      date,
+      exercises: plannedExercises,
+    };
+
+    setWorkoutPlan(plan);
+    router.push("/workout");
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="min-h-screen bg-white text-black p-4">
+      <h1 className="text-2xl font-bold mb-4 text-center">
+        Дневник тренировок
+      </h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      <div className="mb-4">
+        <label className="block mb-2">Выберите дату тренировки:</label>
+        <Calendar selectedDate={date} onDateChange={setDate} />
+      </div>
+
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold mb-2">Составьте тренировку</h2>
+        {exerciseForms.map((form, index) => (
+          <div key={index} className="border p-4 mb-4 rounded shadow">
+            <div className="mb-2">
+              <label className="block mb-1">Упражнение:</label>
+              <select
+                value={form.exerciseId}
+                onChange={(e) =>
+                  updateExercise(index, { exerciseId: e.target.value })
+                }
+                className="border rounded p-2 w-full"
+              >
+                {EXERCISES.map((ex) => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-2">
+              <h3 className="font-semibold">Подходы:</h3>
+              {form.sets.map((set, setIndex) => (
+                <div key={setIndex} className="flex space-x-2 mb-2">
+                  <input
+                    type="number"
+                    value={set.weight}
+                    onChange={(e) =>
+                      updateSet(
+                        index,
+                        setIndex,
+                        "weight",
+                        parseFloat(e.target.value)
+                      )
+                    }
+                    placeholder="Вес"
+                    className="border rounded p-2 w-1/2"
+                  />
+                  <input
+                    type="number"
+                    value={set.reps}
+                    onChange={(e) =>
+                      updateSet(
+                        index,
+                        setIndex,
+                        "reps",
+                        parseInt(e.target.value)
+                      )
+                    }
+                    placeholder="Повторы"
+                    className="border rounded p-2 w-1/2"
+                  />
+                </div>
+              ))}
+              <button
+                onClick={() => addSet(index)}
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+              >
+                Добавить подход
+              </button>
+            </div>
+          </div>
+        ))}
+
+        <button
+          onClick={addExercise}
+          className="bg-green-500 text-white px-4 py-2 rounded mb-4"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          Добавить упражнение
+        </button>
+      </div>
+
+      <div className="text-center">
+        <button
+          onClick={startWorkout}
+          className="bg-indigo-500 text-white px-6 py-3 rounded font-semibold"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Начать тренировку
+        </button>
+      </div>
     </div>
   );
-}
+};
+
+export default HomePage;
