@@ -1,9 +1,11 @@
-import { useRouter } from "next/router";
+"use client"
+
+import { useRouter, useParams } from "next/navigation";
 import { EXERCISES } from "../../data/exercises";
 
 const ExerciseDetail = () => {
   const router = useRouter();
-  const { id } = router.query;
+  const { id } = useParams();
 
   const exercise = EXERCISES.find((ex) => ex.id === id);
 
