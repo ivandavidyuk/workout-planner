@@ -1,4 +1,6 @@
-import { useRouter } from "next/router";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { useWorkout } from "../context/WorkoutContext";
 import { useState } from "react";
 import Timer from "../components/Timer";
@@ -19,7 +21,9 @@ const WorkoutPage = () => {
     return (
       <div className="p-4">
         <p>Нет запланированной тренировки.</p>
-        <button onClick={() => router.push("/")} className="text-blue-500">Назад</button>
+        <button onClick={() => router.push("/")} className="text-blue-500">
+          Назад
+        </button>
       </div>
     );
   }
@@ -44,14 +48,19 @@ const WorkoutPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black p-4">
+    <div className="min-h-screen bg-white text-black p-4 flex flex-col justify-center items-center">
       <button onClick={() => router.back()} className="text-blue-500 mb-4">
         &larr; Назад
       </button>
-      <h1 className="text-2xl font-bold mb-4 text-center">Выполнение тренировки</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">
+        Выполнение тренировки
+      </h1>
 
       <div className="mb-6">
-        <Timer initialTime={120} onComplete={() => alert("Время отдыха истекло")} />
+        <Timer
+          initialTime={120}
+          onComplete={() => alert("Время отдыха истекло")}
+        />
       </div>
 
       {workoutPlan.exercises.map((exercise, exIndex) => (
@@ -64,7 +73,12 @@ const WorkoutPage = () => {
                 placeholder="Вес выполнено"
                 value={actualResults[exIndex]?.sets[setIndex]?.weight || 0}
                 onChange={(e) =>
-                  updateActualSet(exIndex, setIndex, "weight", parseFloat(e.target.value))
+                  updateActualSet(
+                    exIndex,
+                    setIndex,
+                    "weight",
+                    parseFloat(e.target.value)
+                  )
                 }
                 className="border rounded p-2 w-1/2"
               />
@@ -73,7 +87,12 @@ const WorkoutPage = () => {
                 placeholder="Повторы выполнено"
                 value={actualResults[exIndex]?.sets[setIndex]?.reps || 0}
                 onChange={(e) =>
-                  updateActualSet(exIndex, setIndex, "reps", parseInt(e.target.value))
+                  updateActualSet(
+                    exIndex,
+                    setIndex,
+                    "reps",
+                    parseInt(e.target.value)
+                  )
                 }
                 className="border rounded p-2 w-1/2"
               />

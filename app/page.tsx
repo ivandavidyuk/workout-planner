@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -82,7 +82,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black p-4">
+    <div className="min-h-screen bg-white text-black p-4 flex flex-col justify-center items-center">
       <h1 className="text-2xl font-bold mb-4 text-center">
         Дневник тренировок
       </h1>
@@ -125,7 +125,7 @@ const HomePage = () => {
                         index,
                         setIndex,
                         "weight",
-                        parseFloat(e.target.value)
+                        e.target.value === "" ? 0 : parseFloat(e.target.value)
                       )
                     }
                     placeholder="Вес"
@@ -139,7 +139,7 @@ const HomePage = () => {
                         index,
                         setIndex,
                         "reps",
-                        parseInt(e.target.value)
+                        e.target.value === "" ? 0 : parseInt(e.target.value)
                       )
                     }
                     placeholder="Повторы"
@@ -156,13 +156,14 @@ const HomePage = () => {
             </div>
           </div>
         ))}
-
-        <button
-          onClick={addExercise}
-          className="bg-green-500 text-white px-4 py-2 rounded mb-4"
-        >
-          Добавить упражнение
-        </button>
+        <div className="text-center">
+          <button
+            onClick={addExercise}
+            className="bg-green-500 text-white px-4 py-2 rounded mb-4"
+          >
+            Добавить упражнение
+          </button>
+        </div>
       </div>
 
       <div className="text-center">

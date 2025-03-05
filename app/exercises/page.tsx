@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { EXERCISES } from "../../data/exercises";
+import { EXERCISES } from "../data/exercises";
 
 const ExercisesPage = () => {
   return (

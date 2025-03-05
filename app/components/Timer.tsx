@@ -17,7 +17,9 @@ const Timer: React.FC<TimerProps> = ({ initialTime = 120, onComplete }) => {
       }, 1000);
     } else if (timeLeft === 0) {
       setIsRunning(false);
-      onComplete && onComplete();
+      if (onComplete) {
+        onComplete();
+      }
     }
     return () => clearInterval(timer);
   }, [isRunning, timeLeft, onComplete]);
