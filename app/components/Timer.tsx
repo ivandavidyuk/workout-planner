@@ -34,15 +34,20 @@ const Timer: React.FC<TimerProps> = ({ initialTime = 120, onComplete }) => {
         {Math.floor(timeLeft / 60)
           .toString()
           .padStart(2, "0")}
-        :
-        {(timeLeft % 60).toString().padStart(2, "0")}
+        :{(timeLeft % 60).toString().padStart(2, "0")}
       </div>
       <div className="flex space-x-2">
-        <button onClick={() => adjustTime(10)} className="bg-green-500 text-white px-2 py-1 rounded">
-          +10s
+        <button
+          onClick={() => adjustTime(-30)}
+          className="bg-red-500 text-white px-2 py-1 rounded"
+        >
+          -30s
         </button>
-        <button onClick={() => adjustTime(-10)} className="bg-red-500 text-white px-2 py-1 rounded">
-          -10s
+        <button
+          onClick={() => adjustTime(30)}
+          className="bg-green-500 text-white px-2 py-1 rounded"
+        >
+          +30s
         </button>
       </div>
       <button

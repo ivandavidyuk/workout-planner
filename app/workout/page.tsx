@@ -70,8 +70,8 @@ const WorkoutPage = () => {
             <div key={setIndex} className="flex space-x-2 mb-2">
               <input
                 type="number"
-                placeholder="Вес выполнено"
-                value={actualResults[exIndex]?.sets[setIndex]?.weight || 0}
+                placeholder={`Вес: цель ${set.weight}кг`}
+                value={actualResults[exIndex]?.sets[setIndex]?.weight || ""}
                 onChange={(e) =>
                   updateActualSet(
                     exIndex,
@@ -84,8 +84,8 @@ const WorkoutPage = () => {
               />
               <input
                 type="number"
-                placeholder="Повторы выполнено"
-                value={actualResults[exIndex]?.sets[setIndex]?.reps || 0}
+                placeholder={`Повторы: цель ${set.reps}`}
+                value={actualResults[exIndex]?.sets[setIndex]?.reps || ""}
                 onChange={(e) =>
                   updateActualSet(
                     exIndex,

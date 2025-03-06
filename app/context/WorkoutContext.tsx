@@ -3,8 +3,8 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 export interface ExerciseSet {
-  weight: number;
-  reps: number;
+  weight: number | string;
+  reps: number | string;
 }
 
 export interface PlannedExercise {

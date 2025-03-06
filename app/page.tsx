@@ -27,7 +27,7 @@ const HomePage = () => {
   const addExercise = () => {
     setExerciseForms([
       ...exerciseForms,
-      { exerciseId: EXERCISES[0].id, sets: [{ weight: 0, reps: 0 }] },
+      { exerciseId: EXERCISES[0].id, sets: [{ weight: "", reps: "" }] },
     ]);
   };
 
@@ -39,7 +39,7 @@ const HomePage = () => {
 
   const addSet = (exerciseIndex: number) => {
     const newForms = [...exerciseForms];
-    newForms[exerciseIndex].sets.push({ weight: 0, reps: 0 });
+    newForms[exerciseIndex].sets.push({ weight: "", reps: "" });
     setExerciseForms(newForms);
   };
 
@@ -47,7 +47,7 @@ const HomePage = () => {
     exerciseIndex: number,
     setIndex: number,
     field: "weight" | "reps",
-    value: number
+    value: string
   ) => {
     const newForms = [...exerciseForms];
     newForms[exerciseIndex].sets[setIndex] = {
@@ -58,17 +58,15 @@ const HomePage = () => {
   };
 
   const startWorkout = () => {
-    if (exerciseForms.length === 0) {
-      alert("Добавьте хотя бы одно упражнение");
-      return;
-    }
-
     const plannedExercises = exerciseForms.map((form) => {
       const exerciseData = EXERCISES.find((ex) => ex.id === form.exerciseId);
       return {
         id: form.exerciseId,
         name: exerciseData ? exerciseData.name : form.exerciseId,
-        sets: form.sets,
+        sets: form.sets.map((set) => ({
+          weight: set.weight === "" ? 0 : parseFloat(set.weight.toString()),
+          reps: set.reps === "" ? 0 : parseInt(set.reps.toString()),
+        })),
       } as PlannedExercise;
     });
 
@@ -87,13 +85,12 @@ const HomePage = () => {
         Дневник тренировок
       </h1>
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-col justify-center items-center">
         <label className="block mb-2">Выберите дату тренировки:</label>
         <Calendar selectedDate={date} onDateChange={setDate} />
       </div>
 
       <div className="mb-4">
-        <h2 className="text-xl font-semibold mb-2">Составьте тренировку</h2>
         {exerciseForms.map((form, index) => (
           <div key={index} className="border p-4 mb-4 rounded shadow">
             <div className="mb-2">
@@ -113,7 +110,7 @@ const HomePage = () => {
               </select>
             </div>
 
-            <div className="mb-2">
+            <div className="mb-2 flex flex-col">
               <h3 className="font-semibold">Подходы:</h3>
               {form.sets.map((set, setIndex) => (
                 <div key={setIndex} className="flex space-x-2 mb-2">
@@ -121,12 +118,7 @@ const HomePage = () => {
                     type="number"
                     value={set.weight}
                     onChange={(e) =>
-                      updateSet(
-                        index,
-                        setIndex,
-                        "weight",
-                        e.target.value === "" ? 0 : parseFloat(e.target.value)
-                      )
+                      updateSet(index, setIndex, "weight", e.target.value)
                     }
                     placeholder="Вес"
                     className="border rounded p-2 w-1/2"
@@ -135,14 +127,9 @@ const HomePage = () => {
                     type="number"
                     value={set.reps}
                     onChange={(e) =>
-                      updateSet(
-                        index,
-                        setIndex,
-                        "reps",
-                        e.target.value === "" ? 0 : parseInt(e.target.value)
-                      )
+                      updateSet(index, setIndex, "reps", e.target.value)
                     }
-                    placeholder="Повторы"
+                    placeholder="Повторения"
                     className="border rounded p-2 w-1/2"
                   />
                 </div>
@@ -166,14 +153,16 @@ const HomePage = () => {
         </div>
       </div>
 
-      <div className="text-center">
-        <button
-          onClick={startWorkout}
-          className="bg-indigo-500 text-white px-6 py-3 rounded font-semibold"
-        >
-          Начать тренировку
-        </button>
-      </div>
+      {exerciseForms.length > 0 && (
+        <div className="text-center">
+          <button
+            onClick={startWorkout}
+            className="bg-indigo-500 text-white px-6 py-3 rounded font-semibold"
+          >
+            Начать тренировку
+          </button>
+        </div>
+      )}
     </div>
   );
 };
