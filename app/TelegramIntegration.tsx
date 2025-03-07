@@ -1,27 +1,56 @@
 "use client";
 
+interface TelegramUser {
+  id: number;
+  first_name: string;
+  last_name: string;
+  username: string;
+  photo_url: string;
+  auth_date: number;
+  hash: string;
+}
+
 import { useEffect } from "react";
 
-export default function TelegramIntegration() {
+export default function TelegramIntegration({ onAuth }: { onAuth: (user: TelegramUser) => void }) {
   useEffect(() => {
-    // Проверяем, доступен ли объект Telegram в браузере
-    if (typeof window !== "undefined" && (window).Telegram?.WebApp) {
-      const tg = (window).Telegram.WebApp;
-      
-      // Разворачиваем WebApp
-      tg.expand();
-
-      // Настраиваем MainButton (по желанию)
-      tg.MainButton.text = "Сохранить тренировку";
-      tg.MainButton.show();
-
-      tg.MainButton.onClick(() => {
-        // Обработка нажатия на MainButton
-        // Например, отправить результаты на сервер
-        alert("Тренировка сохранена!");
-      });
+    interface Telegram {
+      WebApp: {
+        ready: () => void;
+        initDataUnsafe?: {
+          user?: {
+            id: number;
+            first_name: string;
+            last_name: string;
+            username: string;
+            photo_url: string;
+          };
+        };
+        initData: string;
+      };
     }
-  }, []);
 
-  return null; // Компонент ничего не рендерит, просто конфигурирует WebApp
+    if (typeof window !== "undefined" && (window as unknown as { Telegram: Telegram }).Telegram?.WebApp) {
+      const tg = (window as unknown as { Telegram: Telegram }).Telegram.WebApp;
+
+      tg.ready();
+
+      const user = tg.initDataUnsafe?.user;
+      if (user) {
+        const telegramUser = {
+          id: user.id,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          username: user.username,
+          photo_url: user.photo_url,
+          auth_date: Date.now(),
+          hash: tg.initData,
+        };
+        localStorage.setItem("telegramUser", JSON.stringify(telegramUser));
+        onAuth(telegramUser);
+      }
+    }
+  }, [onAuth]);
+
+  return null;
 }

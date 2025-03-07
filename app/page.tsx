@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Calendar from "./components/Calendar";
-import TelegramLogin from "./TelegramLogin";
+import TelegramIntegration from "./TelegramIntegration";
 import {
   useWorkout,
   WorkoutPlan,
@@ -90,7 +90,7 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-white text-black p-4 flex flex-col justify-center items-center">
-      {!user && <TelegramLogin onAuth={(user) => setUser(user)} />}
+      <TelegramIntegration onAuth={(user) => setUser(user)} />
       {user && (
         <h2 className="text-xl font-bold mb-4 text-center">
           Привет, {user.first_name} {user.last_name}
