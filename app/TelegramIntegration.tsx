@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 interface TelegramUser {
   id: number;
   first_name: string;
@@ -10,28 +12,12 @@ interface TelegramUser {
   hash: string;
 }
 
-import { useEffect } from "react";
-
 export default function TelegramIntegration({ onAuth }: { onAuth: (user: TelegramUser) => void }) {
   useEffect(() => {
-    interface Telegram {
-      WebApp: {
-        ready: () => void;
-        initDataUnsafe?: {
-          user?: {
-            id: number;
-            first_name: string;
-            last_name: string;
-            username: string;
-            photo_url: string;
-          };
-        };
-        initData: string;
-      };
-    }
-
-    if (typeof window !== "undefined" && (window as unknown as { Telegram: Telegram }).Telegram?.WebApp) {
-      const tg = (window as unknown as { Telegram: Telegram }).Telegram.WebApp;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (typeof window !== "undefined" && (window as any).Telegram?.WebApp) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tg = (window as any).Telegram.WebApp;
 
       tg.ready();
 
