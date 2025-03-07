@@ -30,6 +30,7 @@ const TelegramLogin = ({ onAuth }: { onAuth: (user: TelegramUser) => void }) => 
     document.getElementById("telegram-login")?.appendChild(script);
 
     window.onTelegramAuth = (user: TelegramUser) => {
+      localStorage.setItem("telegramUser", JSON.stringify(user));
       onAuth(user);
     };
   }, [onAuth]);
