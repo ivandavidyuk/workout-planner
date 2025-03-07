@@ -2,6 +2,7 @@
   "name": "workout-planner",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,6 +10,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "crypto": "^1.0.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
     "next": "15.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
