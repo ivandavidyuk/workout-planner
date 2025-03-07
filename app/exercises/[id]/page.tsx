@@ -1,11 +1,12 @@
-"use client"
+"use client";
 
 import { useRouter, useParams } from "next/navigation";
 import { EXERCISES } from "../../data/exercises";
 
 const ExerciseDetail = () => {
   const router = useRouter();
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id as string;
 
   const exercise = EXERCISES.find((ex) => ex.id === id);
 
