@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Calendar from "./components/Calendar";
+import TelegramLogin from "./TelegramLogin";
 import {
   useWorkout,
   WorkoutPlan,
@@ -23,6 +24,7 @@ const HomePage = () => {
     new Date().toISOString().split("T")[0]
   );
   const [exerciseForms, setExerciseForms] = useState<ExerciseForm[]>([]);
+  const [user, setUser] = useState<{ first_name: string; last_name: string } | null>(null);
 
   const addExercise = () => {
     setExerciseForms([
@@ -81,6 +83,12 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-white text-black p-4 flex flex-col justify-center items-center">
+      <TelegramLogin onAuth={(user) => setUser(user)} />
+      {user && (
+        <h2 className="text-xl font-bold mb-4 text-center">
+          Привет, {user.first_name} {user.last_name}
+        </h2>
+      )}
       <h1 className="text-2xl font-bold mb-4 text-center">
         Дневник тренировок
       </h1>
