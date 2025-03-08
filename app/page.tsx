@@ -26,12 +26,35 @@ const HomePage = () => {
   const [exerciseForms, setExerciseForms] = useState<ExerciseForm[]>([]);
   const [user, setUser] = useState<{ first_name: string; last_name: string } | null>(null);
 
+  // Загружаем сохраненные тренировки при монтировании компонента
   useEffect(() => {
     const storedUser = localStorage.getItem("telegramUser");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
-  }, []);
+
+    // Загружаем тренировку для выбранной даты
+    loadWorkoutForDate(date);
+  }, [date]);
+
+  // Сохраняем тренировку при изменении упражнений
+  useEffect(() => {
+    if (exerciseForms.length > 0) {
+      const workouts = JSON.parse(localStorage.getItem("workouts") || "{}");
+      workouts[date] = exerciseForms;
+      localStorage.setItem("workouts", JSON.stringify(workouts));
+    }
+  }, [exerciseForms, date]);
+
+  const loadWorkoutForDate = (selectedDate: string) => {
+    const workouts = JSON.parse(localStorage.getItem("workouts") || "{}");
+    const savedWorkout = workouts[selectedDate];
+    if (savedWorkout) {
+      setExerciseForms(savedWorkout);
+    } else {
+      setExerciseForms([]); // Очищаем формы, если для выбранной даты нет сохраненной тренировки
+    }
+  };
 
   const addExercise = () => {
     setExerciseForms([
