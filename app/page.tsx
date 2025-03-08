@@ -24,7 +24,10 @@ const HomePage = () => {
     new Date().toISOString().split("T")[0]
   );
   const [exerciseForms, setExerciseForms] = useState<ExerciseForm[]>([]);
-  const [user, setUser] = useState<{ first_name: string; last_name: string } | null>(null);
+  const [user, setUser] = useState<{
+    first_name: string;
+    last_name: string;
+  } | null>(null);
 
   // Загружаем сохраненные тренировки при монтировании компонента
   useEffect(() => {
@@ -126,13 +129,30 @@ const HomePage = () => {
       <div className="mb-4 flex flex-col justify-center items-center">
         <label className="block mb-2">Выберите дату тренировки:</label>
         <Calendar selectedDate={date} onDateChange={setDate} />
+        {exerciseForms.length > 0 && (
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded mt-4"
+            onClick={() => setExerciseForms([])}
+          >
+            Удалить все упражнения
+          </button>
+        )}
       </div>
 
       <div className="mb-4">
         {exerciseForms.map((form, index) => (
-          <div key={index} className="border p-4 mb-4 rounded shadow">
+          <div key={index} className="border p-4 mb-4 rounded shadow relative">
             <div className="mb-2">
               <label className="block mb-1">Упражнение:</label>
+              <button
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                onClick={() => {
+                  const newForms = exerciseForms.filter((_, i) => i !== index);
+                  setExerciseForms(newForms);
+                }}
+              >
+                Х
+              </button>
               <select
                 value={form.exerciseId}
                 onChange={(e) =>
