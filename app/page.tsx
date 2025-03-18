@@ -33,11 +33,6 @@ const HomePage = () => {
 
   // Загружаем сохраненные тренировки при монтировании компонента
   useEffect(() => {
-    const storedUser = localStorage.getItem("telegramUser");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-
     // Загружаем тренировку для выбранной даты
     loadWorkoutForDate(date);
   }, [date]);
@@ -95,6 +90,11 @@ const HomePage = () => {
   };
 
   const startWorkout = () => {
+    // Проверяем, что у нас есть упражнения
+    if (exerciseForms.length === 0) {
+      return;
+    }
+
     const plannedExercises = exerciseForms.map((form) => {
       const exerciseData = EXERCISES.find((ex) => ex.id === form.exerciseId);
       return {
@@ -119,9 +119,15 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-white text-black p-4 flex flex-col justify-center items-center">
       <TelegramIntegration 
-        onAuth={(user) => setUser(user)}
+        onAuth={(user) => {
+          setUser(user);
+          setIsTelegramReady(true);
+        }}
         onReady={() => setIsTelegramReady(true)}
-        onError={(error) => setTelegramError(error.message)}
+        onError={(error) => {
+          setTelegramError(error.message);
+          setIsTelegramReady(false);
+        }}
       />
       {user && (
         <h2 className="text-xl font-bold mb-4 text-center">
