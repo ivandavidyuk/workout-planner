@@ -28,6 +28,8 @@ const HomePage = () => {
     first_name: string;
     last_name: string;
   } | null>(null);
+  const [isTelegramReady, setIsTelegramReady] = useState(false);
+  const [telegramError, setTelegramError] = useState<string | null>(null);
 
   // Загружаем сохраненные тренировки при монтировании компонента
   useEffect(() => {
@@ -116,11 +118,20 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-white text-black p-4 flex flex-col justify-center items-center">
-      <TelegramIntegration onAuth={(user) => setUser(user)} />
+      <TelegramIntegration 
+        onAuth={(user) => setUser(user)}
+        onReady={() => setIsTelegramReady(true)}
+        onError={(error) => setTelegramError(error.message)}
+      />
       {user && (
         <h2 className="text-xl font-bold mb-4 text-center">
           Привет, {user.first_name} {user.last_name}
         </h2>
+      )}
+      {telegramError && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {telegramError}
+        </div>
       )}
       <h1 className="text-2xl font-bold mb-4 text-center">
         Дневник тренировок
@@ -215,9 +226,14 @@ const HomePage = () => {
         <div className="text-center">
           <button
             onClick={startWorkout}
-            className="bg-indigo-500 text-white px-6 py-3 rounded font-semibold"
+            disabled={!isTelegramReady}
+            className={`px-6 py-3 rounded font-semibold ${
+              isTelegramReady
+                ? "bg-indigo-500 text-white hover:bg-indigo-600"
+                : "bg-gray-400 text-white cursor-not-allowed"
+            }`}
           >
-            Начать тренировку
+            {isTelegramReady ? "Начать тренировку" : "Загрузка..."}
           </button>
         </div>
       )}
