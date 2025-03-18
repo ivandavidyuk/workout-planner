@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 export interface ExerciseSet {
   weight: number | string;
@@ -29,7 +29,34 @@ const WorkoutContext = createContext<WorkoutContextType>({
 });
 
 export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
-  const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
+  const [workoutPlan, setWorkoutPlanState] = useState<WorkoutPlan | null>(null);
+
+  // Загружаем сохраненный план тренировки при монтировании
+  useEffect(() => {
+    const savedPlan = localStorage.getItem("currentWorkoutPlan");
+    if (savedPlan) {
+      try {
+        setWorkoutPlanState(JSON.parse(savedPlan));
+      } catch (error) {
+        console.error("Error loading saved workout plan:", error);
+        localStorage.removeItem("currentWorkoutPlan");
+      }
+    }
+  }, []);
+
+  // Сохраняем план тренировки при изменении
+  useEffect(() => {
+    if (workoutPlan) {
+      localStorage.setItem("currentWorkoutPlan", JSON.stringify(workoutPlan));
+    } else {
+      localStorage.removeItem("currentWorkoutPlan");
+    }
+  }, [workoutPlan]);
+
+  const setWorkoutPlan = (plan: WorkoutPlan) => {
+    console.log("Setting new workout plan:", plan);
+    setWorkoutPlanState(plan);
+  };
 
   return (
     <WorkoutContext.Provider value={{ workoutPlan, setWorkoutPlan }}>

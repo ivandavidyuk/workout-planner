@@ -90,8 +90,13 @@ const HomePage = () => {
   };
 
   const startWorkout = () => {
+    console.log("startWorkout called");
+    console.log("isTelegramReady:", isTelegramReady);
+    console.log("exerciseForms:", exerciseForms);
+
     // Проверяем, что у нас есть упражнения
     if (exerciseForms.length === 0) {
+      console.log("No exercises found");
       return;
     }
 
@@ -112,7 +117,9 @@ const HomePage = () => {
       exercises: plannedExercises,
     };
 
+    console.log("Setting workout plan:", plan);
     setWorkoutPlan(plan);
+    console.log("Navigating to /workout");
     router.push("/workout");
   };
 
@@ -120,11 +127,16 @@ const HomePage = () => {
     <div className="min-h-screen bg-white text-black p-4 flex flex-col justify-center items-center">
       <TelegramIntegration 
         onAuth={(user) => {
+          console.log("onAuth called with user:", user);
           setUser(user);
           setIsTelegramReady(true);
         }}
-        onReady={() => setIsTelegramReady(true)}
+        onReady={() => {
+          console.log("onReady called");
+          setIsTelegramReady(true);
+        }}
         onError={(error) => {
+          console.log("onError called with error:", error);
           setTelegramError(error.message);
           setIsTelegramReady(false);
         }}
@@ -231,7 +243,11 @@ const HomePage = () => {
       {exerciseForms.length > 0 && (
         <div className="text-center">
           <button
-            onClick={startWorkout}
+            onClick={() => {
+              console.log("Button clicked");
+              console.log("Current isTelegramReady:", isTelegramReady);
+              startWorkout();
+            }}
             disabled={!isTelegramReady}
             className={`px-6 py-3 rounded font-semibold ${
               isTelegramReady
