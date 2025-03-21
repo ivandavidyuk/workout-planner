@@ -24,11 +24,7 @@ interface WorkoutContextType {
   setWorkoutPlan: (plan: WorkoutPlan) => void;
   userId: string | null;
   setUserId: (id: string | null) => void;
-  saveStatus: {
-    isLoading: boolean;
-    error: string | null;
-    success: boolean;
-  };
+  saveStatus: 'idle' | 'saving' | 'success' | 'error';
 }
 
 const WorkoutContext = createContext<WorkoutContextType>({
@@ -36,21 +32,13 @@ const WorkoutContext = createContext<WorkoutContextType>({
   setWorkoutPlan: () => {},
   userId: null,
   setUserId: () => {},
-  saveStatus: {
-    isLoading: false,
-    error: null,
-    success: false,
-  },
+  saveStatus: 'idle',
 });
 
 export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
   const [workoutPlan, setWorkoutPlanState] = useState<WorkoutPlan | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [saveStatus, setSaveStatus] = useState({
-    isLoading: false,
-    error: null as string | null,
-    success: false,
-  });
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
   // Загружаем сохраненный план тренировки при монтировании
   useEffect(() => {
@@ -99,60 +87,35 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const saveWorkoutPlan = async () => {
       if (!workoutPlan || !userId) {
-        setSaveStatus({
-          isLoading: false,
-          error: "Не удалось сохранить тренировку: отсутствуют данные",
-          success: false,
-        });
+        console.log('Cannot save workout plan:', { workoutPlan, userId });
         return;
       }
 
-      setSaveStatus({
-        isLoading: true,
-        error: null,
-        success: false,
-      });
-
       try {
+        setSaveStatus('saving');
         const supabase = getSupabaseClient();
         
-        const supabasePlan: Omit<SupabaseWorkoutPlan, 'id' | 'created_at'> = {
-          user_id: userId,
-          date: workoutPlan.date,
-          exercises: workoutPlan.exercises.map(ex => ({
-            id: ex.id,
-            name: ex.name,
-            sets: ex.sets.map(set => ({
-              weight: typeof set.weight === 'string' ? parseFloat(set.weight) : set.weight,
-              reps: typeof set.reps === 'string' ? parseInt(set.reps) : set.reps,
-            })),
-          })),
-        };
-
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('workout_plans')
-          .insert([supabasePlan])
-          .select();
+          .insert([{
+            user_id: userId,
+            date: new Date().toISOString(),
+            exercises: workoutPlan.exercises
+          }])
+          .select()
+          .single();
 
         if (error) {
-          setSaveStatus({
-            isLoading: false,
-            error: `Ошибка сохранения: ${error.message}`,
-            success: false,
-          });
-        } else {
-          setSaveStatus({
-            isLoading: false,
-            error: null,
-            success: true,
-          });
+          console.error('Error saving workout plan:', error);
+          setSaveStatus('error');
+          return;
         }
+
+        console.log('Successfully saved workout plan:', data);
+        setSaveStatus('success');
       } catch (error) {
-        setSaveStatus({
-          isLoading: false,
-          error: error instanceof Error ? error.message : "Произошла ошибка при сохранении тренировки",
-          success: false,
-        });
+        console.error('Error in saveWorkoutPlan:', error);
+        setSaveStatus('error');
       }
     };
 

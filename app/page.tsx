@@ -11,16 +11,31 @@ import {
   ExerciseSet,
 } from "./context/WorkoutContext";
 import { EXERCISES } from "./data/exercises";
-import { getSupabaseClient, WorkoutPlan as SupabaseWorkoutPlan } from "./lib/supabase";
+import { getSupabaseClient } from "./lib/supabase";
 
 interface ExerciseForm {
   exerciseId: string;
   sets: ExerciseSet[];
 }
 
+interface SupabaseWorkoutData {
+  id: string;
+  user_id: string;
+  date: string;
+  exercises: Array<{
+    id: string;
+    name: string;
+    sets: Array<{
+      weight: number;
+      reps: number;
+    }>;
+  }>;
+  created_at: string;
+}
+
 const HomePage = () => {
   const router = useRouter();
-  const { setWorkoutPlan, saveStatus } = useWorkout();
+  const { setWorkoutPlan, setUserId: setContextUserId, saveStatus } = useWorkout();
   const [date, setDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
@@ -32,7 +47,6 @@ const HomePage = () => {
   } | null>(null);
   const [isTelegramReady, setIsTelegramReady] = useState(false);
   const [telegramError, setTelegramError] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
 
   // Загружаем сохраненные тренировки при монтировании компонента
   useEffect(() => {
@@ -41,12 +55,15 @@ const HomePage = () => {
   }, [date]);
 
   const loadWorkoutForDate = async (selectedDate: string) => {
+    if (!user?.id) return;
+
     try {
       const supabase = getSupabaseClient();
       const { data, error } = await supabase
         .from('workout_plans')
         .select('*')
         .eq('date', selectedDate)
+        .eq('user_id', user.id.toString())
         .single();
 
       if (error) {
@@ -55,14 +72,16 @@ const HomePage = () => {
         return;
       }
 
-      if (data) {
-        const supabaseData = data as unknown as SupabaseWorkoutPlan;
-        const exercises = supabaseData.exercises.map((ex) => ({
+      if (data && 
+          typeof data === 'object' && 
+          'exercises' in data && 
+          Array.isArray(data.exercises)) {
+        const exercises = data.exercises.map((ex: any) => ({
           exerciseId: ex.id,
-          sets: ex.sets.map((set) => ({
-            weight: set.weight,
-            reps: set.reps,
-          })),
+          sets: Array.isArray(ex.sets) ? ex.sets.map((set: any) => ({
+            weight: (set.weight ?? 0).toString(),
+            reps: (set.reps ?? 0).toString(),
+          })) : [],
         }));
         setExerciseForms(exercises);
       } else {
@@ -108,20 +127,13 @@ const HomePage = () => {
   };
 
   const startWorkout = () => {
-    console.log("startWorkout called");
-    console.log("isTelegramReady:", isTelegramReady);
-    console.log("exerciseForms:", exerciseForms);
-    console.log("userId:", userId);
-
-    // Проверяем, что у нас есть упражнения
-    if (exerciseForms.length === 0) {
-      console.log("No exercises found");
+    if (!user?.id) {
+      console.log("No user ID found");
       return;
     }
 
-    // Проверяем, что пользователь авторизован
-    if (!userId) {
-      console.log("No user ID found");
+    if (exerciseForms.length === 0) {
+      console.log("No exercises found");
       return;
     }
 
@@ -142,9 +154,7 @@ const HomePage = () => {
       exercises: plannedExercises,
     };
 
-    console.log("Setting workout plan:", plan);
     setWorkoutPlan(plan);
-    console.log("Navigating to /workout");
     router.push("/workout");
   };
 
@@ -156,7 +166,7 @@ const HomePage = () => {
           setUser(user);
           setIsTelegramReady(true);
           if (user.id) {
-            setUserId(user.id.toString());
+            setContextUserId(user.id.toString());
           }
         }}
         onReady={() => {
@@ -186,6 +196,12 @@ const HomePage = () => {
       <div className="mb-4 flex flex-col justify-center items-center">
         <label className="block mb-2">Выберите дату тренировки:</label>
         <Calendar selectedDate={date} onDateChange={setDate} />
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
+          onClick={addExercise}
+        >
+          Добавить упражнение
+        </button>
         {exerciseForms.length > 0 && (
           <button
             className="bg-red-500 text-white px-4 py-2 rounded mt-4"
@@ -208,7 +224,7 @@ const HomePage = () => {
                   setExerciseForms(newForms);
                 }}
               >
-                Х
+                ×
               </button>
               <select
                 value={form.exerciseId}
@@ -250,48 +266,33 @@ const HomePage = () => {
                 </div>
               ))}
               <button
+                className="bg-green-500 text-white px-4 py-2 rounded mt-2"
                 onClick={() => addSet(index)}
-                className="bg-blue-500 text-white px-4 py-2 rounded"
               >
                 Добавить подход
               </button>
             </div>
           </div>
         ))}
-        <div className="text-center">
-          <button
-            onClick={addExercise}
-            className="bg-green-500 text-white px-4 py-2 rounded mb-4"
-          >
-            Добавить упражнение
-          </button>
-        </div>
       </div>
 
       {exerciseForms.length > 0 && (
-        <div className="text-center">
-          {saveStatus.isLoading && (
-            <div className="text-blue-500 mb-2">Сохранение тренировки...</div>
-          )}
-          {saveStatus.error && (
-            <div className="text-red-500 mb-2">{saveStatus.error}</div>
-          )}
-          {saveStatus.success && (
-            <div className="text-green-500 mb-2">Тренировка успешно сохранена!</div>
-          )}
+        <div className="flex flex-col items-center">
           <button
-            onClick={() => {
-              startWorkout();
-            }}
-            disabled={!isTelegramReady || saveStatus.isLoading}
-            className={`px-6 py-3 rounded font-semibold ${
-              isTelegramReady && !saveStatus.isLoading
-                ? "bg-indigo-500 text-white hover:bg-indigo-600"
-                : "bg-gray-400 text-white cursor-not-allowed"
-            }`}
+            className="bg-blue-500 text-white px-6 py-3 rounded text-lg font-semibold"
+            onClick={startWorkout}
           >
-            {isTelegramReady ? "Начать тренировку" : "Загрузка..."}
+            Начать тренировку
           </button>
+          {saveStatus === 'saving' && (
+            <p className="text-blue-500 mt-2">Сохранение...</p>
+          )}
+          {saveStatus === 'success' && (
+            <p className="text-green-500 mt-2">Сохранено!</p>
+          )}
+          {saveStatus === 'error' && (
+            <p className="text-red-500 mt-2">Ошибка при сохранении</p>
+          )}
         </div>
       )}
     </div>
