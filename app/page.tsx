@@ -47,7 +47,6 @@ const HomePage = () => {
     last_name?: string;
     id?: number;
   } | null>(null);
-  const [isTelegramReady, setIsTelegramReady] = useState(false);
   const [telegramError, setTelegramError] = useState<string | null>(null);
 
   const loadWorkoutForDate = useCallback(async (selectedDate: string) => {
@@ -166,19 +165,16 @@ const HomePage = () => {
         onAuth={(user) => {
           console.log("onAuth called with user:", user);
           setUser(user);
-          setIsTelegramReady(true);
           if (user.id) {
             setContextUserId(user.id.toString());
           }
         }}
         onReady={() => {
           console.log("onReady called");
-          setIsTelegramReady(true);
         }}
         onError={(error) => {
           console.log("onError called with error:", error);
           setTelegramError(error.message);
-          setIsTelegramReady(false);
         }}
       />
       {user && (
