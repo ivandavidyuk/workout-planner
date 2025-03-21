@@ -64,6 +64,7 @@ const TelegramIntegration = ({
           onAuth({
             first_name: user.first_name,
             last_name: user.last_name,
+            id: user.id,
           });
         } else {
           onError(new Error("User data not found"));
