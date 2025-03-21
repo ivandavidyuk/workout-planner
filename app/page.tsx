@@ -26,10 +26,12 @@ const HomePage = () => {
   const [exerciseForms, setExerciseForms] = useState<ExerciseForm[]>([]);
   const [user, setUser] = useState<{
     first_name: string;
-    last_name: string;
+    last_name?: string;
+    id?: number;
   } | null>(null);
   const [isTelegramReady, setIsTelegramReady] = useState(false);
   const [telegramError, setTelegramError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Загружаем сохраненные тренировки при монтировании компонента
   useEffect(() => {
@@ -93,10 +95,17 @@ const HomePage = () => {
     console.log("startWorkout called");
     console.log("isTelegramReady:", isTelegramReady);
     console.log("exerciseForms:", exerciseForms);
+    console.log("userId:", userId);
 
     // Проверяем, что у нас есть упражнения
     if (exerciseForms.length === 0) {
       console.log("No exercises found");
+      return;
+    }
+
+    // Проверяем, что пользователь авторизован
+    if (!userId) {
+      console.log("No user ID found");
       return;
     }
 
@@ -130,6 +139,9 @@ const HomePage = () => {
           console.log("onAuth called with user:", user);
           setUser(user);
           setIsTelegramReady(true);
+          if (user.id) {
+            setUserId(user.id.toString());
+          }
         }}
         onReady={() => {
           console.log("onReady called");
