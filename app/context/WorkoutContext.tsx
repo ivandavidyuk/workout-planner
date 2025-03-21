@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { supabase, WorkoutPlan as SupabaseWorkoutPlan, SupabaseExercise, SupabaseExerciseSet } from "../lib/supabase";
+import { getSupabaseClient, WorkoutPlan as SupabaseWorkoutPlan, SupabaseExercise, SupabaseExerciseSet } from "../lib/supabase";
 
 export interface ExerciseSet {
   weight: number | string;
@@ -42,32 +42,38 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
     const loadWorkoutPlan = async () => {
       if (!userId) return;
 
-      const { data, error } = await supabase
-        .from('workout_plans')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+      try {
+        const supabase = getSupabaseClient();
+        const { data, error } = await supabase
+          .from('workout_plans')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
 
-      if (error) {
-        console.error("Error loading workout plan:", error);
-        return;
-      }
+        if (error) {
+          console.error("Error loading workout plan:", error);
+          return;
+        }
 
-      if (data) {
-        const plan: WorkoutPlan = {
-          date: data.date,
-          exercises: data.exercises.map((ex: SupabaseExercise) => ({
-            id: ex.id,
-            name: ex.name,
-            sets: ex.sets.map((set: SupabaseExerciseSet) => ({
-              weight: set.weight,
-              reps: set.reps,
+        if (data) {
+          const supabaseData = data as unknown as SupabaseWorkoutPlan;
+          const plan: WorkoutPlan = {
+            date: supabaseData.date,
+            exercises: supabaseData.exercises.map((ex: SupabaseExercise) => ({
+              id: ex.id,
+              name: ex.name,
+              sets: ex.sets.map((set: SupabaseExerciseSet) => ({
+                weight: set.weight,
+                reps: set.reps,
+              })),
             })),
-          })),
-        };
-        setWorkoutPlanState(plan);
+          };
+          setWorkoutPlanState(plan);
+        }
+      } catch (error) {
+        console.error("Error initializing Supabase:", error);
       }
     };
 
@@ -79,25 +85,30 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
     const saveWorkoutPlan = async () => {
       if (!workoutPlan || !userId) return;
 
-      const supabasePlan: Omit<SupabaseWorkoutPlan, 'id' | 'created_at'> = {
-        user_id: userId,
-        date: workoutPlan.date,
-        exercises: workoutPlan.exercises.map(ex => ({
-          id: ex.id,
-          name: ex.name,
-          sets: ex.sets.map(set => ({
-            weight: typeof set.weight === 'string' ? parseFloat(set.weight) : set.weight,
-            reps: typeof set.reps === 'string' ? parseInt(set.reps) : set.reps,
+      try {
+        const supabase = getSupabaseClient();
+        const supabasePlan: Omit<SupabaseWorkoutPlan, 'id' | 'created_at'> = {
+          user_id: userId,
+          date: workoutPlan.date,
+          exercises: workoutPlan.exercises.map(ex => ({
+            id: ex.id,
+            name: ex.name,
+            sets: ex.sets.map(set => ({
+              weight: typeof set.weight === 'string' ? parseFloat(set.weight) : set.weight,
+              reps: typeof set.reps === 'string' ? parseInt(set.reps) : set.reps,
+            })),
           })),
-        })),
-      };
+        };
 
-      const { error } = await supabase
-        .from('workout_plans')
-        .insert([supabasePlan]);
+        const { error } = await supabase
+          .from('workout_plans')
+          .insert([supabasePlan]);
 
-      if (error) {
-        console.error("Error saving workout plan:", error);
+        if (error) {
+          console.error("Error saving workout plan:", error);
+        }
+      } catch (error) {
+        console.error("Error initializing Supabase:", error);
       }
     };
 
