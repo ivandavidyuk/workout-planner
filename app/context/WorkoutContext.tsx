@@ -150,7 +150,7 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
       } catch (error) {
         setSaveStatus({
           isLoading: false,
-          error: "Произошла ошибка при сохранении тренировки",
+          error: error instanceof Error ? error.message : "Произошла ошибка при сохранении тренировки",
           success: false,
         });
       }
