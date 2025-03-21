@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Calendar from "./components/Calendar";
 import TelegramIntegration from "./TelegramIntegration";
@@ -18,18 +18,20 @@ interface ExerciseForm {
   sets: ExerciseSet[];
 }
 
+interface SupabaseExercise {
+  id: string;
+  name: string;
+  sets: Array<{
+    weight: number;
+    reps: number;
+  }>;
+}
+
 interface SupabaseWorkoutData {
   id: string;
   user_id: string;
   date: string;
-  exercises: Array<{
-    id: string;
-    name: string;
-    sets: Array<{
-      weight: number;
-      reps: number;
-    }>;
-  }>;
+  exercises: SupabaseExercise[];
   created_at: string;
 }
 
@@ -48,13 +50,7 @@ const HomePage = () => {
   const [isTelegramReady, setIsTelegramReady] = useState(false);
   const [telegramError, setTelegramError] = useState<string | null>(null);
 
-  // Загружаем сохраненные тренировки при монтировании компонента
-  useEffect(() => {
-    // Загружаем тренировку для выбранной даты
-    loadWorkoutForDate(date);
-  }, [date]);
-
-  const loadWorkoutForDate = async (selectedDate: string) => {
+  const loadWorkoutForDate = useCallback(async (selectedDate: string) => {
     if (!user?.id) return;
 
     try {
@@ -76,9 +72,10 @@ const HomePage = () => {
           typeof data === 'object' && 
           'exercises' in data && 
           Array.isArray(data.exercises)) {
-        const exercises = data.exercises.map((ex: any) => ({
+        const typedData = data as unknown as SupabaseWorkoutData;
+        const exercises = typedData.exercises.map((ex) => ({
           exerciseId: ex.id,
-          sets: Array.isArray(ex.sets) ? ex.sets.map((set: any) => ({
+          sets: Array.isArray(ex.sets) ? ex.sets.map((set) => ({
             weight: (set.weight ?? 0).toString(),
             reps: (set.reps ?? 0).toString(),
           })) : [],
@@ -91,7 +88,12 @@ const HomePage = () => {
       console.error("Error in loadWorkoutForDate:", error);
       setExerciseForms([]);
     }
-  };
+  }, [user?.id]);
+
+  // Загружаем сохраненные тренировки при монтировании компонента
+  useEffect(() => {
+    loadWorkoutForDate(date);
+  }, [date, loadWorkoutForDate]);
 
   const addExercise = () => {
     setExerciseForms([
