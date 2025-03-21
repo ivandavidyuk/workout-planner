@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { supabase, WorkoutPlan as SupabaseWorkoutPlan } from "../lib/supabase";
+import { supabase, WorkoutPlan as SupabaseWorkoutPlan, SupabaseExercise, SupabaseExerciseSet } from "../lib/supabase";
 
 export interface ExerciseSet {
   weight: number | string;
@@ -58,10 +58,10 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
       if (data) {
         const plan: WorkoutPlan = {
           date: data.date,
-          exercises: data.exercises.map((ex: any) => ({
+          exercises: data.exercises.map((ex: SupabaseExercise) => ({
             id: ex.id,
             name: ex.name,
-            sets: ex.sets.map((set: any) => ({
+            sets: ex.sets.map((set: SupabaseExerciseSet) => ({
               weight: set.weight,
               reps: set.reps,
             })),
