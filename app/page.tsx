@@ -20,7 +20,7 @@ interface ExerciseForm {
 
 const HomePage = () => {
   const router = useRouter();
-  const { setWorkoutPlan } = useWorkout();
+  const { setWorkoutPlan, saveStatus } = useWorkout();
   const [date, setDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
@@ -270,15 +270,22 @@ const HomePage = () => {
 
       {exerciseForms.length > 0 && (
         <div className="text-center">
+          {saveStatus.isLoading && (
+            <div className="text-blue-500 mb-2">Сохранение тренировки...</div>
+          )}
+          {saveStatus.error && (
+            <div className="text-red-500 mb-2">{saveStatus.error}</div>
+          )}
+          {saveStatus.success && (
+            <div className="text-green-500 mb-2">Тренировка успешно сохранена!</div>
+          )}
           <button
             onClick={() => {
-              console.log("Button clicked");
-              console.log("Current isTelegramReady:", isTelegramReady);
               startWorkout();
             }}
-            disabled={!isTelegramReady}
+            disabled={!isTelegramReady || saveStatus.isLoading}
             className={`px-6 py-3 rounded font-semibold ${
-              isTelegramReady
+              isTelegramReady && !saveStatus.isLoading
                 ? "bg-indigo-500 text-white hover:bg-indigo-600"
                 : "bg-gray-400 text-white cursor-not-allowed"
             }`}
