@@ -11,6 +11,7 @@ import {
   ExerciseSet,
 } from "./context/WorkoutContext";
 import { EXERCISES } from "./data/exercises";
+import { getSupabaseClient, WorkoutPlan as SupabaseWorkoutPlan } from "./lib/supabase";
 
 interface ExerciseForm {
   exerciseId: string;
@@ -39,22 +40,37 @@ const HomePage = () => {
     loadWorkoutForDate(date);
   }, [date]);
 
-  // Сохраняем тренировку при изменении упражнений
-  useEffect(() => {
-    if (exerciseForms.length > 0) {
-      const workouts = JSON.parse(localStorage.getItem("workouts") || "{}");
-      workouts[date] = exerciseForms;
-      localStorage.setItem("workouts", JSON.stringify(workouts));
-    }
-  }, [exerciseForms, date]);
+  const loadWorkoutForDate = async (selectedDate: string) => {
+    try {
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase
+        .from('workout_plans')
+        .select('*')
+        .eq('date', selectedDate)
+        .single();
 
-  const loadWorkoutForDate = (selectedDate: string) => {
-    const workouts = JSON.parse(localStorage.getItem("workouts") || "{}");
-    const savedWorkout = workouts[selectedDate];
-    if (savedWorkout) {
-      setExerciseForms(savedWorkout);
-    } else {
-      setExerciseForms([]); // Очищаем формы, если для выбранной даты нет сохраненной тренировки
+      if (error) {
+        console.error("Error loading workout:", error);
+        setExerciseForms([]);
+        return;
+      }
+
+      if (data) {
+        const supabaseData = data as unknown as SupabaseWorkoutPlan;
+        const exercises = supabaseData.exercises.map((ex) => ({
+          exerciseId: ex.id,
+          sets: ex.sets.map((set) => ({
+            weight: set.weight,
+            reps: set.reps,
+          })),
+        }));
+        setExerciseForms(exercises);
+      } else {
+        setExerciseForms([]);
+      }
+    } catch (error) {
+      console.error("Error in loadWorkoutForDate:", error);
+      setExerciseForms([]);
     }
   };
 
